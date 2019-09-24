@@ -4911,6 +4911,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var uniqueID = Materialize.guid();
       $select.attr('data-select-id', uniqueID);
       var wrapper = $('<div class="select-wrapper"></div>');
+
+      // to fix Chrome 73 bug
+      wrapper.click(function (e) {
+        e.stopPropagation();
+      });
+
       wrapper.addClass($select.attr('class'));
       if ($select.is(':disabled')) wrapper.addClass('disabled');
       var options = $('<ul id="select-options-' + uniqueID + '" class="dropdown-content select-dropdown ' + (multiple ? 'multiple-select-dropdown' : '') + '"></ul>'),
@@ -6940,6 +6946,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         /**
          * Prepare the input element with all bindings.
+         * The contents of this function are copied from pickadate v3.6.3
+         * https://github.com/amsul/pickadate.js/blob/master/lib/picker.js
          */
         function prepareElement() {
 
@@ -6951,22 +6959,35 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             // Add the “input” class name.
             addClass(CLASSES.input).
 
-            // Remove the tabindex.
-            attr('tabindex', -1).
-
             // If there’s a `data-value`, update the value of the element.
-            val($ELEMENT.data('value') ? P.get('select', SETTINGS.format) : ELEMENT.value);
+            val($ELEMENT.data('value') ? P.get('select', SETTINGS.format) : ELEMENT.value).
+
+            // On focus/click, open the picker.
+            on('focus.' + STATE.id + ' click.' + STATE.id, debounce(function (event) {
+                event.preventDefault();
+                P.open();
+            }, 150))
+
+            // Mousedown handler to capture when the user starts interacting
+            // with the picker. This is used in working around a bug in Chrome 73.
+            .on('mousedown', function () {
+                STATE.handlingOpen = true;
+                var handler = function handler() {
+                    // By default mouseup events are fired before a click event.
+                    // By using a timeout we can force the mouseup to be handled
+                    // after the corresponding click event is handled.
+                    setTimeout(function () {
+                        $(document).off('mouseup', handler);
+                        STATE.handlingOpen = false;
+                    }, 0);
+                };
+                $(document).on('mouseup', handler);
+            });
 
             // Only bind keydown events if the element isn’t editable.
             if (!SETTINGS.editable) {
 
                 $ELEMENT.
-
-                // On focus/click, focus onto the root to open it up.
-                on('focus.' + STATE.id + ' click.' + STATE.id, function (event) {
-                    event.preventDefault();
-                    P.$root.eq(0).focus();
-                }).
 
                 // Handle keyboard event based on the picker being opened or not.
                 on('keydown.' + STATE.id, handleKeydownEvent);
@@ -6979,6 +7000,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
                 readonly: false,
                 owns: ELEMENT.id + '_root'
             });
+        }
+
+        function debounce(func, wait, immediate) {
+            var timeout;
+            return function () {
+                var context = this,
+                    args = arguments;
+                var later = function later() {
+                    timeout = null;
+                    if (!immediate) func.apply(context, args);
+                };
+                var callNow = immediate && !timeout;
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+                if (callNow) func.apply(context, args);
+            };
         }
 
         /**
@@ -8798,8 +8835,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 		this.spanHours.click($.proxy(this.toggleView, this, 'hours'));
 		this.spanMinutes.click($.proxy(this.toggleView, this, 'minutes'));
 
-		// Show or toggle
-		input.on('focus.clockpicker click.clockpicker', $.proxy(this.show, this));
+		// Show or toggle (debounce is to fix Chrome 73 bug)
+		input.on('focus.clockpicker click.clockpicker', $.proxy(debounce(this.show, 150), this));
 
 		// Build ticks
 		var tickTpl = $('<div class="clockpicker-tick"></div>'),
@@ -9313,6 +9350,21 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 			}
 		});
 	};
+	function debounce(func, wait, immediate) {
+		var timeout;
+		return function () {
+			var context = this,
+			    args = arguments;
+			var later = function later() {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+			var callNow = immediate && !timeout;
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+			if (callNow) func.apply(context, args);
+		};
+	}
 })(jQuery);
 'use strict';
 
