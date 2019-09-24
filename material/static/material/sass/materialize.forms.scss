@@ -28,6 +28,7 @@ form .error {
         text-overflow: ellipsis;
         width: calc(100% - 21px);
         overflow: hidden;
+        height: auto;
     }
 
     &.has-error .prefix {
@@ -112,6 +113,12 @@ select.material-ignore {
         input.select-dropdown {
             margin-top: -7px;
         }
+    }
+}
+
+[type="checkbox"] {
+    + label {
+        pointer-events: auto;
     }
 }
 

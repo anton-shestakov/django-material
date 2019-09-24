@@ -23,7 +23,8 @@ form .error {
   white-space: nowrap;
   text-overflow: ellipsis;
   width: calc(100% - 21px);
-  overflow: hidden; }
+  overflow: hidden;
+  height: auto; }
 
 .input-field.has-error .prefix {
   color: #F44336; }
@@ -80,6 +81,9 @@ select.material-ignore {
   margin-top: 0px; }
   .select-field .select-wrapper input.select-dropdown {
     margin-top: -7px; }
+
+[type="checkbox"] + label {
+  pointer-events: auto; }
 
 /* CHECHBOX FIELD */
 .checkbox-field {
