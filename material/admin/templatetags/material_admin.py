@@ -69,7 +69,7 @@ def get_app_list(request):
                     'icon': mark_safe(model_icon),
                     'active': False,
                 }
-                if perms.get('change', False):
+                if perms.get('change') or perms.get('view'):
                     try:
                         model_dict['admin_url'] = reverse('admin:%s_%s_changelist' % info, current_app=site.name)
                         if request.path.startswith(model_dict['admin_url']):
